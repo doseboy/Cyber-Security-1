@@ -30,7 +30,7 @@ def main(args):
 	h = md5(state=bytes.fromhex(tok), count=bits) # Creates a hash class from given token and bits
 	
 	expCommand = "&command=UnlockSafes"           # Malicous command
-  h.update(expCommand)                          # Appends command to hash
+  	h.update(expCommand)                          # Appends command to hash
 
 
 	pad = padding(m_len*8)

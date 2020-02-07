@@ -6,8 +6,7 @@
 
 import sys
 from pymd5 import padding, md5    # Module that provided md5 hash class; and function returning padding, given a message length
-from urllib.parse import urlparse
-from urllib.parse import quote
+from urllib.parse import urlparse, quote
 
 def main(args):
 	if not len(args)>1:

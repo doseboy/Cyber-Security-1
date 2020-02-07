@@ -1,0 +1,46 @@
+#!/usr/bin/python3
+
+# Gavin Zimmerman
+# Length Extension Attack
+# Appends new commands to a url with a valid token and command pair.
+
+import sys
+from pymd5 import padding, md5    # Module that provided md5 hash class; and function returning padding, given a message length
+from urllib.parse import urlparse
+from urllib.parse import quote
+
+def main(args):
+	if not len(args)>1:
+		print("No Url provided")
+		return
+  
+	# URL Parsing/ Formatting
+	URL = args[1]         # Assumes first argument to be a valid url as its the sole purpose of this program
+	u = urlparse(URL)
+	query = u.query       # Contains token and commands in format (token=<md5 hash(secret key || commands)>&command=<command1>)
+
+  # Format query to isolate the hash in hexadecimal, and command string
+	p1 = query.find("=")+1
+	p2 = query.find("&")
+	tok=query[p1:p2]
+	com=query[p2+1:]
+
+	# Attack
+	m_len = 8 + len(com)                          # Secret key is 8 bytes
+	bits = (m_len + len(padding(m_len *8)))*8
+	h = md5(state=bytes.fromhex(tok), count=bits) # Creates a hash class from given token and bits
+	
+	expCommand = "&command=UnlockSafes"           # Malicous command
+  h.update(expCommand)                          # Appends command to hash
+
+
+	pad = padding(m_len*8)
+
+	modQuery="?token="+h.hexdigest()+"&"+com+quote(pad)+expCommand
+	modUrl= u.scheme +"://"+ u.netloc+u.path + u.params + modQuery
+
+
+	print(modUrl)           # Outputs a modified Url which now verifies the command to 'unlock the safes'
+
+if __name__ == '__main__':
+	main(sys.argv)

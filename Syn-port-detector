@@ -1,0 +1,45 @@
+#!/usr/bin/python3
+
+import scapy, sys
+from scapy.all import *     # Utilize scapy
+
+
+
+def main(args):
+	if not len(args)>1:       # Takes 1 command input, a pcap file or tcpdump to read from
+		print("No packet capture file given")
+		return
+
+	request_ips={}	# Track syns by ip as key
+	response_ips={}	# Track syn-acks by ip as key
+	flag_ips={}	# Remember IPs to be syn scanning
+
+	fileName=args[1]	# File name
+
+	for pkt in PcapReader(fileName):
+		if pkt.haslayer(Ether) and pkt.haslayer(IP) and pkt.haslayer(TCP):	# Check if packet has the form of a valid TCP packet
+			if (pkt[TCP].flags=='S'):	# Syn Flag
+				ip=pkt[IP].src	# IP is source
+
+				request_ips[ip] = (request_ips[ip] if ip in request_ips else 0)+1	# Increment 1 to mapped value from ip key or default 0
+				response_ips[ip] = (response_ips[ip] if ip in response_ips else 0)  # Default 0 same ip in reponse_ips for if statement
+				if (request_ips[ip]>3*response_ips[ip]):
+					# Add
+					flag_ips[ip]=1	# Flag it for port scan
+				
+			elif (pkt[TCP].flags=='SA'):	# Syn-Ack Flag
+				ip=pkt[IP].dst	# IP is reciever
+
+				response_ips[ip] = (response_ips[ip] if ip in response_ips else 0)+1	# Increment 1 to mapped value from ip key or default 0
+				request_ips[ip] = (request_ips[ip] if ip in request_ips else 0)			# Default 0 same ip in request_ips for if statement; likely will never call, but in case packets are out of order
+				if (not (request_ips[ip]>(3*response_ips[ip]))) and (ip in flag_ips):	# Check to see if condition still holds
+					del flag_ips[ip]	# If not, remove it
+
+
+	for ip in flag_ips:	# Print flagged IPs
+		print(ip)
+    
+
+
+if __name__ == '__main__':
+    main(sys.argv)
